@@ -11,7 +11,7 @@ class CoreFunctions:
         pass
 
     @staticmethod
-    def get_daily_vol(close, lookback=100):
+    def get_daily_vol(close, lookback=100, unit="days"):
         """
         Snippet 3.1, page 44, Daily Volatility Estimates
 
@@ -32,16 +32,17 @@ class CoreFunctions:
         print('Calculating daily volatility for dynamic thresholds')
         
         # daily vol re-indexed to close
-        df0 = close.index.searchsorted(close.index - pd.Timedelta(days=1))
+        df0 = close.index.searchsorted(close.index - pd.Timedelta(value=1, unit=unit))
         df0 = df0[df0 > 0]
         df0 = (pd.Series(close.index[df0 - 1], index=close.index[close.shape[0] - df0.shape[0]:]))
         
         df0 = close.loc[df0.index] / close.loc[df0.values].values - 1  # daily returns
         df0 = df0.ewm(span=lookback).std()
         return df0
+    
 
     @staticmethod
-    def get_autocorr(close, lookback=100):
+    def get_autocorr(close, lookback=100, unit="days"):
         """
         Daily Autocorr Estimates
 
@@ -54,7 +55,7 @@ class CoreFunctions:
         print('Calculating Daily AutoCorr')
 
         # daily vol re-indexed to close
-        df0 = close.index.searchsorted(close.index - pd.Timedelta(days=1))
+        df0 = close.index.searchsorted(close.index - pd.Timedelta(value=1, unit=unit))
         df0 = df0[df0 > 0]
         df0 = (pd.Series(close.index[df0 - 1], index=close.index[close.shape[0] - df0.shape[0]:]))
 
@@ -62,6 +63,7 @@ class CoreFunctions:
         # df0 = df0.ewm(span=lookback).autocorr()
         df0 = df0.rolling(lookback).apply(lambda x: x.autocorr(), raw=False)
         return df0
+    
 
     @staticmethod
     def get_t_events(raw_price, threshold):
@@ -117,7 +119,7 @@ class CoreFunctions:
         return event_timestamps
 
     @staticmethod
-    def add_vertical_barrier(t_events, close, num_days=1):
+    def add_vertical_barrier(t_events, close, num=1, unit="days"):
         """
         Snippet 3.4 page 49, Adding a Vertical Barrier
 
@@ -131,7 +133,7 @@ class CoreFunctions:
         :param num_days: (int) maximum number of days a trade can be active
         :return: (series) timestamps of vertical barriers
         """
-        t1 = close.index.searchsorted(t_events + pd.Timedelta(days=num_days))
+        t1 = close.index.searchsorted(t_events + pd.Timedelta(value=num, unit=unit))
         t1 = t1[t1 < close.shape[0]]
         t1 = pd.Series(close.index[t1], index=t_events[:t1.shape[0]])  # NaNs at end
         return t1
