@@ -55,7 +55,7 @@ class CoreFunctions:
         print('Calculating Daily AutoCorr')
 
         # daily vol re-indexed to close
-        df0 = close.index.searchsorted(close.index - pd.Timedelta(value=1, unit=unit))
+        df0 = np.array([i for i in range(len(close),-1, -1)])
         df0 = df0[df0 > 0]
         df0 = (pd.Series(close.index[df0 - 1], index=close.index[close.shape[0] - df0.shape[0]:]))
 
